@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Table of Contents
 
 [Introduction](#introduction)
@@ -81,3 +82,6 @@ can find code that produces that result in `tutorial.ipynb` jupyter notebook.
 
 Needs further work for enhancements like: Batch processing support for speedup, return of
 multiple suggestions, threshold fine-tuning for specific data, ect.
+=======
+# Violence-Detection
+>>>>>>> 1307194495ca23251bb87b1349a97b88cd88435f
