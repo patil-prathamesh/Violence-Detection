@@ -25,4 +25,3 @@ label-settings:
     - 'person walking in office'
     - 'group of people'
   default-label: 'Unknown' # value to return if model's confidence is less than "prediction-threshold"
-

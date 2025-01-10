@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Violence Detection</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            margin-top: 50px;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border: none;
+        }
+        .output {
+            margin-top: 20px;
+            display: none;
+        }
+        img, video {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">Violence Detection</h1>
+        <form id="uploadForm">
+            <div class="mb-3">
+                <label for="fileInput" class="form-label">Upload an Image or Video</label>
+                <input type="file" class="form-control" id="fileInput" name="file" accept="image/*,video/*" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Upload & Analyze</button>
+        </form>
+        <div class="output" id="output">
+            <h2>Processed Output:</h2>
+            <img id="outputImage" src="" alt="Processed Image">
+            <video id="outputVideo" controls></video>
+        </div>
+    </div>
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const response = await fetch('/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            const outputDiv = document.getElementById('output');
+            const outputImage = document.getElementById('outputImage');
+            const outputVideo = document.getElementById('outputVideo');
+
+            if (file.type.startsWith('image/')) {
+                outputDiv.style.display = 'block';
+                outputVideo.style.display = 'none';
+                outputImage.style.display = 'block';
+                outputImage.src = URL.createObjectURL(await response.blob());
+            } else if (file.type.startsWith('video/')) {
+                outputDiv.style.display = 'block';
+                outputImage.style.display = 'none';
+                outputVideo.style.display = 'block';
+                outputVideo.src = URL.createObjectURL(await response.blob());
+            }
+        });
+    </script>
+</body>
+</html>

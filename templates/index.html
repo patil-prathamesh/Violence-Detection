@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload and Analysis</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        form {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        input[type="file"] {
+            margin-bottom: 10px;
+            padding: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .output-container {
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            overflow-y: auto;
+            max-height: 500px;
+            border: 1px solid #ddd;
+        }
+
+        .frame-output {
+            padding: 15px;
+            margin: 10px 0;
+            background-color: #f7f7f7;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid #007bff;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .frame-output .frame-number {
+            font-weight: bold;
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .frame-output .label {
+            font-size: 14px;
+            color: #007bff;
+            margin-top: 5px;
+        }
+
+        .download-btn-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        #downloadBtn {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        #downloadBtn:hover {
+            background-color: #218838;
+        }
+
+        /* Style for error messages */
+        .error-message {
+            color: red;
+            font-size: 16px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .loading-message {
+            font-size: 18px;
+            text-align: center;
+            margin-top: 20px;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <h1>Upload an Image or Video</h1>
+    <form id="uploadForm" action="/upload" method="POST" enctype="multipart/form-data">
+        <input type="file" name="file" accept="image/*,video/*" required>
+        <button type="submit">Analyze</button>
+    </form>
+
+    <div id="output" class="output-container" style="display: none;"></div>
+
+    <div class="download-btn-container">
+        <button id="downloadBtn" style="display: none;">Download as PDF</button>
+    </div>
+
+    <div id="loading" class="loading-message" style="display: none;">Analyzing...</div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <script>
+        const form = document.getElementById('uploadForm');
+        const outputContainer = document.getElementById('output');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const loadingMessage = document.getElementById('loading');
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const formData = new FormData(form);
+
+            // Show loading message and hide other elements during processing
+            loadingMessage.style.display = 'block';
+            outputContainer.style.display = 'none';
+            downloadBtn.style.display = 'none';
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to process the file.');
+                }
+
+                const data = await response.json();
+                const frames = data.frames;
+
+                // Clear previous results
+                outputContainer.innerHTML = '';
+
+                frames.forEach((frame) => {
+                    // Create a container for each frame
+                    const frameOutput = document.createElement('div');
+                    frameOutput.className = 'frame-output';
+
+                    frameOutput.innerHTML = `
+                        <div class="frame-number">Frame ${frame.frame}:</div>
+                        <div class="label">${frame.label}</div>
+                    `;
+                    outputContainer.appendChild(frameOutput);
+                });
+
+                outputContainer.style.display = 'block'; // Show the output container
+                downloadBtn.style.display = 'block'; // Show the download button
+            } catch (error) {
+                outputContainer.innerHTML = `<div class="error-message">Error: ${error.message}</div>`;
+                outputContainer.style.display = 'block';
+                downloadBtn.style.display = 'none';
+            } finally {
+                loadingMessage.style.display = 'none';
+            }
+        });
+
+        downloadBtn.addEventListener('click', () => {
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF();
+
+            const frames = document.querySelectorAll('.frame-output');
+            let yPosition = 10;  // Start Y position for the first frame
+
+            frames.forEach((frame, index) => {
+                pdf.text(`Frame ${index + 1}: ${frame.querySelector('.label').textContent}`, 10, yPosition);
+                yPosition += 10;
+                if (yPosition > 270) {  // Add a new page if the content overflows
+                    pdf.addPage();
+                    yPosition = 10;
+                }
+            });
+
+            pdf.save('output.pdf');
+        });
+    </script>
+</body>
+</html>
